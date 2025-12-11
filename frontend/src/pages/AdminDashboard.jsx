@@ -457,7 +457,7 @@ const AdminDashboard = () => {
                     type="button"
                     onClick={handleBulkAssignToMe}
                     disabled={bulkUpdating}
-                    className="px-2 py-1 rounded btn-primary-gradient disabled:opacity-60 text-xs"
+                    className="px-2 py-1 rounded btn-assign-gradient disabled:opacity-60 text-xs"
                   >
                     Assign to me
                   </button>
@@ -465,7 +465,7 @@ const AdminDashboard = () => {
                     type="button"
                     onClick={() => handleBulkStatusChange('resolved')}
                     disabled={bulkUpdating}
-                    className="px-2 py-1 rounded btn-primary-gradient disabled:opacity-60 text-xs"
+                    className="px-2 py-1 rounded btn-resolved-gradient disabled:opacity-60 text-xs"
                   >
                     Mark Resolved
                   </button>
@@ -473,7 +473,7 @@ const AdminDashboard = () => {
                     type="button"
                     onClick={() => handleBulkStatusChange('closed')}
                     disabled={bulkUpdating}
-                    className="px-2 py-1 rounded btn-dashboard-gradient disabled:opacity-60 text-xs"
+                    className="px-2 py-1 rounded btn-closed-gradient disabled:opacity-60 text-xs"
                   >
                     Mark Closed
                   </button>
@@ -492,7 +492,7 @@ const AdminDashboard = () => {
                     type="button"
                     onClick={clearSelection}
                     disabled={bulkUpdating}
-                    className="px-2 py-1 rounded border border-blue-200 text-blue-700 hover:bg-blue-100 disabled:opacity-60 text-xs"
+                    className="px-2 py-1 rounded btn-clear-gradient disabled:opacity-60 text-xs"
                   >
                     Clear
                   </button>
