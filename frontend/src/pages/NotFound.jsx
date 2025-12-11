@@ -83,7 +83,7 @@ const NotFound = () => {
               <div className="flex flex-wrap justify-center gap-3">
                 <button
                   onClick={() => navigate('/tickets/create')}
-                  className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+                  className="btn-create-ticket-gradient flex items-center gap-2 text-sm"
                 >
                   Create Ticket
                 </button>

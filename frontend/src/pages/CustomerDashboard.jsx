@@ -258,13 +258,13 @@ const CustomerDashboard = () => {
                 {dashboardData?.total || 0} {dashboardData?.total === 1 ? 'Ticket' : 'Tickets'}
               </p>
             </div>
-            <Button
+            <button
               onClick={() => navigate('/tickets/create')}
-              className="btn-primary-gradient"
+              className="btn-create-ticket-gradient flex items-center gap-2"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4" />
               Create Ticket
-            </Button>
+            </button>
           </div>
         </div>
 

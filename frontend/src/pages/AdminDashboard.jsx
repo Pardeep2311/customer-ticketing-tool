@@ -681,7 +681,7 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowTemplatesModal(true)}
-                className="px-3 py-2 text-sm border-2 border-black rounded hover:bg-gray-50 flex items-center gap-2"
+                className="btn-templates-gradient flex items-center gap-2 text-sm"
                 title="Ticket Templates"
               >
                 <FileText className="w-4 h-4" />
@@ -689,7 +689,7 @@ const AdminDashboard = () => {
               </button>
               <button
                 onClick={exportToCSV}
-                className="px-3 py-2 text-sm border-2 border-black rounded hover:bg-gray-50 flex items-center gap-2"
+                className="btn-export-csv-gradient flex items-center gap-2 text-sm"
                 title="Export to CSV"
               >
                 <Download className="w-4 h-4" />
@@ -697,7 +697,7 @@ const AdminDashboard = () => {
               </button>
               <button
                 onClick={exportToPDF}
-                className="px-3 py-2 text-sm border-2 border-black rounded hover:bg-gray-50 flex items-center gap-2"
+                className="btn-export-pdf-gradient flex items-center gap-2 text-sm"
                 title="Export to PDF"
               >
                 <Download className="w-4 h-4" />
