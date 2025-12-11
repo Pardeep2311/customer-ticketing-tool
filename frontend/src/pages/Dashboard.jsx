@@ -41,9 +41,16 @@ const Dashboard = () => {
   };
 
   const processDashboardData = (data) => {
-    // Process monthly data (generate from recent tickets or use existing data)
-    const monthlyTickets = generateMonthlyData(data.recentTickets || []);
-    setMonthlyData(monthlyTickets);
+    // Process monthly data from API or generate from recent tickets
+    if (data.monthlyTickets && Array.isArray(data.monthlyTickets) && data.monthlyTickets.length > 0) {
+      // Use actual monthly data from API
+      const processedMonthly = processMonthlyDataFromAPI(data.monthlyTickets);
+      setMonthlyData(processedMonthly);
+    } else {
+      // Fallback: generate from recent tickets
+      const monthlyTickets = generateMonthlyData(data.recentTickets || []);
+      setMonthlyData(monthlyTickets);
+    }
 
     // Process company data for all users
     if (data.byCompany && Array.isArray(data.byCompany)) {
@@ -71,8 +78,40 @@ const Dashboard = () => {
     }
   };
 
+  const processMonthlyDataFromAPI = (apiData) => {
+    // Process monthly data from API response
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthMap = {
+      'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+      'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+    };
+    
+    // Create a map of month to count from API data
+    const monthlyCounts = {};
+    apiData.forEach(item => {
+      const monthName = item.month || months[parseInt(item.month_num) - 1];
+      monthlyCounts[monthName] = parseInt(item.count) || 0;
+    });
+
+    // Get last 12 months (including current month)
+    const currentDate = new Date();
+    const last12Months = [];
+    
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const monthIndex = date.getMonth();
+      const monthName = months[monthIndex];
+      last12Months.push({
+        month: monthName,
+        tickets: monthlyCounts[monthName] || 0
+      });
+    }
+
+    return last12Months;
+  };
+
   const generateMonthlyData = (recentTickets) => {
-    // Generate monthly data from recent tickets
+    // Fallback: Generate monthly data from recent tickets if API doesn't provide it
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthlyCounts = {};
     
@@ -90,11 +129,21 @@ const Dashboard = () => {
       }
     });
 
-    // Convert to array format
-    return months.map(month => ({
-      month,
-      tickets: monthlyCounts[month] || Math.floor(Math.random() * 50) + 20 // Fallback to random data
-    }));
+    // Get last 12 months
+    const currentDate = new Date();
+    const last12Months = [];
+    
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const monthIndex = date.getMonth();
+      const monthName = months[monthIndex];
+      last12Months.push({
+        month: monthName,
+        tickets: monthlyCounts[monthName] || 0
+      });
+    }
+
+    return last12Months;
   };
 
   const handleRefresh = () => {

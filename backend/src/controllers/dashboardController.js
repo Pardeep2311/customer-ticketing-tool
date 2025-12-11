@@ -32,6 +32,20 @@ const getCustomerDashboard = async (req, res) => {
       [customer_id]
     );
 
+    // Monthly ticket counts (last 12 months)
+    const monthlyTickets = await query(
+      `SELECT 
+        DATE_FORMAT(created_at, '%b') as month,
+        DATE_FORMAT(created_at, '%m') as month_num,
+        COUNT(*) as count
+       FROM tickets
+       WHERE customer_id = ?
+         AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+       GROUP BY DATE_FORMAT(created_at, '%Y-%m'), month, month_num
+       ORDER BY DATE_FORMAT(created_at, '%Y-%m') ASC`,
+      [customer_id]
+    );
+
     // Get priority breakdown
     const priorityCounts = await query(
       `SELECT priority, COUNT(*) as count 
@@ -63,7 +77,8 @@ const getCustomerDashboard = async (req, res) => {
         return acc;
       }, {}),
       byCompany: companyCounts,
-      recentTickets
+      recentTickets,
+      monthlyTickets
     };
 
     sendSuccess(res, 'Dashboard data retrieved successfully', stats);
@@ -132,6 +147,18 @@ const getAdminDashboard = async (req, res) => {
        LIMIT 10`
     );
 
+    // Monthly ticket counts (last 12 months)
+    const monthlyTickets = await query(
+      `SELECT 
+        DATE_FORMAT(created_at, '%b') as month,
+        DATE_FORMAT(created_at, '%m') as month_num,
+        COUNT(*) as count
+       FROM tickets
+       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+       GROUP BY DATE_FORMAT(created_at, '%Y-%m'), month, month_num
+       ORDER BY DATE_FORMAT(created_at, '%Y-%m') ASC`
+    );
+
     // User statistics
     const userStats = await query(
       `SELECT role, COUNT(*) as count 
@@ -163,7 +190,8 @@ const getAdminDashboard = async (req, res) => {
         acc[item.role] = item.count;
         return acc;
       }, {}),
-      recentTickets
+      recentTickets,
+      monthlyTickets
     };
 
     sendSuccess(res, 'Dashboard data retrieved successfully', stats);

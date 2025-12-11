@@ -34,6 +34,21 @@ export function MonthlyTicketsChart({ data = [] }) {
   const totalTickets = chartData.reduce((sum, d) => sum + (d.tickets || 0), 0);
   const avgTickets = Math.round(totalTickets / chartData.length);
 
+  // Calculate trend percentage (compare last 3 months vs previous 3 months)
+  const calculateTrend = () => {
+    if (chartData.length < 6) return { percentage: 0, isPositive: true };
+    
+    const last3Months = chartData.slice(-3).reduce((sum, d) => sum + (d.tickets || 0), 0);
+    const previous3Months = chartData.slice(-6, -3).reduce((sum, d) => sum + (d.tickets || 0), 0);
+    
+    if (previous3Months === 0) return { percentage: last3Months > 0 ? 100 : 0, isPositive: true };
+    
+    const percentage = Math.round(((last3Months - previous3Months) / previous3Months) * 100);
+    return { percentage: Math.abs(percentage), isPositive: percentage >= 0 };
+  };
+
+  const trend = calculateTrend();
+
   // Calculate Y-axis scale (rounded to nearest 50 or 100)
   const getYAxisScale = (max) => {
     if (max <= 50) return 50;
@@ -133,9 +148,11 @@ export function MonthlyTicketsChart({ data = [] }) {
           <h3 className="text-lg font-semibold text-gray-900 mb-1">Monthly Ticket Volume</h3>
           <p className="text-xs text-gray-500">Total: {totalTickets.toLocaleString()} tickets • Avg: {avgTickets.toLocaleString()}/month</p>
         </div>
-        <div className="flex items-center gap-1 text-green-600">
-          <TrendingUp className="w-4 h-4" />
-          <span className="text-xs font-medium">+12%</span>
+        <div className={`flex items-center gap-1 ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          <TrendingUp className={`w-4 h-4 ${!trend.isPositive ? 'rotate-180' : ''}`} />
+          <span className="text-xs font-medium">
+            {trend.isPositive ? '+' : '-'}{trend.percentage}%
+          </span>
         </div>
       </div>
 
