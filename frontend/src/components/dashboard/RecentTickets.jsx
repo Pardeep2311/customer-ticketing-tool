@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../lib/utils';
+import { Search, Filter, X } from 'lucide-react';
 
 const statusStyles = {
   open: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -19,6 +20,9 @@ const priorityStyles = {
 export function RecentTickets({ tickets = [] }) {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -94,6 +98,30 @@ export function RecentTickets({ tickets = [] }) {
     navigate(`/tickets/${ticket.id}`);
   };
 
+  // Filter tickets based on search and filters
+  const filteredTickets = ticketData.filter(ticket => {
+    const matchesSearch = searchTerm === '' || 
+      (ticket.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       ticket.ticket_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       ticket.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesStatus = statusFilter === 'all' || 
+      ticket.status?.toLowerCase() === statusFilter.toLowerCase();
+    
+    const matchesPriority = priorityFilter === 'all' || 
+      ticket.priority?.toLowerCase() === priorityFilter.toLowerCase();
+    
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setPriorityFilter('all');
+  };
+
+  const hasActiveFilters = searchTerm !== '' || statusFilter !== 'all' || priorityFilter !== 'all';
+
   return (
     <div 
       className={cn(
@@ -149,13 +177,82 @@ export function RecentTickets({ tickets = [] }) {
         </svg>
       </div>
 
-      <h3 className="text-lg font-semibold text-gray-900 mb-6 relative z-10">Recent Tickets</h3>
+      <div className="relative z-10 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Recent Tickets</h3>
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
+            >
+              <X className="w-3 h-3" />
+              Clear filters
+            </button>
+          )}
+        </div>
+
+        {/* Search and Filter Bar */}
+        <div className="space-y-3 mb-4">
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search tickets..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border-2 border-black rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Filter Buttons */}
+          <div className="flex flex-wrap gap-2 items-center">
+            {/* Status Filter */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Filter className="w-4 h-4 text-gray-500 hidden sm:block" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="text-xs border-2 border-black rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+              >
+                <option value="all">All Status</option>
+                <option value="open">Open</option>
+                <option value="in-progress">In Progress</option>
+                <option value="pending">Pending</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+
+            {/* Priority Filter */}
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="text-xs border-2 border-black rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+            >
+              <option value="all">All Priority</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Results Count */}
+        {hasActiveFilters && (
+          <p className="text-xs text-gray-500 mb-2">
+            Showing {filteredTickets.length} of {ticketData.length} tickets
+          </p>
+        )}
+      </div>
+
       <div className="space-y-4 relative z-10">
-        {ticketData.map((ticket) => (
+        {filteredTickets.length > 0 ? (
+          filteredTickets.map((ticket) => (
           <div 
             key={ticket.id || ticket.ticket_number}
             onClick={() => handleTicketClick(ticket)}
-            className="group flex items-center justify-between p-4 rounded-lg bg-gray-50 border border-gray-200 transition-all duration-300 cursor-pointer relative overflow-hidden hover:border-blue-300"
+            className="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 rounded-lg bg-gray-50 border border-gray-200 transition-all duration-300 cursor-pointer relative overflow-hidden hover:border-blue-300 gap-2 sm:gap-0"
           >
             {/* Blue gradient overlay on hover */}
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/10 group-hover:via-blue-400/15 group-hover:to-blue-500/10 transition-all duration-300"></div>
@@ -191,11 +288,24 @@ export function RecentTickets({ tickets = [] }) {
                 {ticket.customer_name || 'Unknown Customer'}
               </p>
             </div>
-            <span className="text-xs text-gray-500 ml-4 whitespace-nowrap relative z-10 group-hover:text-blue-600 transition-colors">
+            <span className="text-xs text-gray-500 sm:ml-4 whitespace-nowrap relative z-10 group-hover:text-blue-600 transition-colors self-end sm:self-auto">
               {getTimeAgo(ticket.created_at)}
             </span>
           </div>
-        ))}
+        ))
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-sm">No tickets found matching your filters.</p>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="mt-2 text-blue-600 hover:text-blue-700 text-sm underline"
+              >
+                Clear filters to see all tickets
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 
 export function MetricCard({ 
@@ -7,8 +8,11 @@ export function MetricCard({
   change, 
   changeType = 'neutral', 
   icon: Icon,
-  delay = 0 
+  delay = 0,
+  onClick,
+  clickable = false
 }) {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -21,11 +25,19 @@ export function MetricCard({
   // Generate unique ID for each card's wave gradient
   const cardId = `metric-card-${title.replace(/\s+/g, '-').toLowerCase()}`;
 
+  const handleClick = () => {
+    if (clickable && onClick) {
+      onClick();
+    }
+  };
+
   return (
     <div 
+      onClick={handleClick}
       className={cn(
         "bg-white rounded-xl p-6 border-2 border-black shadow-sm hover:shadow-lg transition-all duration-500 relative overflow-hidden group",
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4',
+        clickable && onClick && 'cursor-pointer hover:border-blue-500 hover:scale-[1.02]'
       )}
     >
       {/* Animated Wave Background */}
