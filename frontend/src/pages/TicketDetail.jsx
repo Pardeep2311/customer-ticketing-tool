@@ -177,10 +177,10 @@ const ReferenceField = ({
         )}
       </div>
       {open && !disabled && !isLocked && (
-        <div className="reference-dropdown absolute left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded shadow-lg z-20 animate-in fade-in slide-in-from-top-1">
+        <div className="reference-dropdown absolute left-0 right-0 mt-1 bg-white dark:bg-slate-800 border-2 border-black rounded shadow-lg z-20 animate-in fade-in slide-in-from-top-1">
           <div className="p-1">
             <input
-              className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-black"
               placeholder="Type to search…"
               value={query}
               onChange={e => setQuery(e.target.value)}
@@ -731,7 +731,7 @@ const TicketDetail = () => {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <div className={`flex h-screen overflow-hidden ${isEditing ? 'bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30' : 'bg-slate-50 dark:bg-slate-900'}`}>
       {/* SIDEBAR */}
       <Sidebar userRole={user?.role || 'customer'} />
 
@@ -827,8 +827,8 @@ const TicketDetail = () => {
         <div className="flex-1 overflow-y-auto p-6 md:p-8">
           <div className="max-w-7xl mx-auto bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 overflow-hidden">
             {/* FORM SECTION */}
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+            <div className={`p-6 border-b border-slate-200 dark:border-slate-700 ${isEditing ? 'bg-gradient-to-br from-blue-50/50 via-white to-purple-50/40 dark:from-slate-900/50 dark:via-slate-800/50 dark:to-slate-900/50 relative overflow-hidden form-pattern-bg' : 'bg-white dark:bg-slate-800'}`}>
+              <form className={`grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 ${isEditing ? 'relative z-10' : ''}`}>
                 {/* LEFT COLUMN */}
                 <div className="space-y-5">
                   {/* Number */}
@@ -838,7 +838,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-3">
                       <input
-                        className="w-full bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm font-mono font-semibold cursor-not-allowed"
+                        className="w-full bg-slate-100 dark:bg-slate-700 border-2 border-black rounded text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm font-mono font-semibold cursor-not-allowed"
                         id="number"
                         readOnly
                         type="text"
@@ -869,7 +869,7 @@ const TicketDetail = () => {
                       {isCustomer && !isEditing && (
                         <input
                           type="text"
-                          className="w-full border border-slate-300 dark:border-slate-600 rounded bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm cursor-not-allowed"
+                          className="w-full border-2 border-black rounded bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm cursor-not-allowed"
                           value={ticket.customer_name || ''}
                           readOnly
                         />
@@ -884,7 +884,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-3 relative">
                       <select
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 pr-10 px-2.5 py-1.5 text-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
+                        className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 pr-10 px-2.5 py-1.5 text-sm transition-colors hover:border-black focus:outline-none focus:ring-2 focus:ring-black focus:border-black appearance-none cursor-pointer"
                         id="location"
                         value={formData.location}
                         onChange={e => setFormData({ ...formData, location: e.target.value })}
@@ -914,7 +914,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-3">
                       <select
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-black focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                         id="category"
                         value={formData.category_id}
                         onChange={e => {
@@ -939,7 +939,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-3">
                       <select
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-black focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                         id="subcategory"
                         value={formData.subcategory_id}
                         onChange={e => setFormData({ ...formData, subcategory_id: e.target.value })}
@@ -961,7 +961,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-3">
                         <select
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-black focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                         id="impact"
                         value={formData.impact}
                         onChange={e => {
@@ -987,7 +987,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-3">
                         <select
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-black focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                         id="urgency"
                         value={formData.urgency}
                         onChange={e => {
@@ -1013,7 +1013,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-3">
                         <select
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm cursor-not-allowed"
+                        className="w-full border-2 border-black rounded bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm cursor-not-allowed"
                         id="priority"
                         value={formData.priority}
                         disabled
@@ -1033,7 +1033,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-3 relative">
                       <input
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 pr-8 px-2.5 py-1.5 text-sm font-mono"
+                        className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 pr-8 px-2.5 py-1.5 text-sm font-mono"
                         id="opened"
                         type="text"
                         value={openedDisplay}
@@ -1049,7 +1049,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-3 relative">
                       <input
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 pr-12 px-2.5 py-1.5 text-sm"
+                        className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 pr-12 px-2.5 py-1.5 text-sm"
                         id="opened-by"
                         type="text"
                         value={ticket.opened_by_name || user?.name || 'System Administrator'}
@@ -1065,7 +1065,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-3">
                       <select
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-black focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                         id="contact-type"
                         value={formData.contact_type}
                         onChange={e => setFormData({ ...formData, contact_type: e.target.value })}
@@ -1085,7 +1085,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-3">
                       <select
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-black focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                         id="state"
                         value={formData.status}
                         onChange={e => setFormData({ ...formData, status: e.target.value })}
@@ -1146,7 +1146,7 @@ const TicketDetail = () => {
                       {isCustomer && !isEditing && ticket.assigned_to_name && (
                         <input
                           type="text"
-                          className="w-full border border-slate-300 dark:border-slate-600 rounded bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm cursor-not-allowed mt-2"
+                          className="w-full border-2 border-black rounded bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm cursor-not-allowed mt-2"
                           value={`Assigned to: ${ticket.assigned_to_name}`}
                           readOnly
                         />
@@ -1163,7 +1163,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-1 md:col-span-7 relative">
                       <input
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 pr-8 px-2.5 py-1.5 text-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 pr-8 px-2.5 py-1.5 text-sm transition-colors hover:border-black focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                         id="short-description"
                         type="text"
                         value={formData.subject}
@@ -1183,7 +1183,7 @@ const TicketDetail = () => {
                     </label>
                     <div className="col-span-1 md:col-span-7">
                       <textarea
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                        className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-black focus:outline-none focus:ring-2 focus:ring-black focus:border-black resize-none"
                         id="description"
                         rows={4}
                         value={formData.description}
@@ -1204,7 +1204,7 @@ const TicketDetail = () => {
                       </label>
                       <div className="col-span-1 md:col-span-7">
                         <textarea
-                          className="w-full border border-green-300 dark:border-green-700 rounded bg-green-50 dark:bg-green-900/20 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                          className="w-full border-2 border-black rounded bg-green-50 dark:bg-green-900/20 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-black focus:outline-none focus:ring-2 focus:ring-black focus:border-black resize-none"
                           id="resolution"
                           rows={3}
                           value={formData.resolution || ''}
@@ -1221,8 +1221,8 @@ const TicketDetail = () => {
                 </div>
 
             {/* NOTES SECTION */}
-            <div className="p-6 bg-white dark:bg-slate-800">
-              <div className="flex justify-between items-center mb-4">
+            <div className={`p-6 ${isEditing ? 'bg-gradient-to-br from-blue-50/50 via-white to-purple-50/40 dark:from-slate-900/50 dark:via-slate-800/50 dark:to-slate-900/50 relative overflow-hidden form-pattern-bg' : 'bg-white dark:bg-slate-800'}`}>
+              <div className={`flex justify-between items-center mb-4 ${isEditing ? 'relative z-10' : ''}`}>
                 <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">Notes</h2>
                 <button
                   type="button"
@@ -1234,7 +1234,7 @@ const TicketDetail = () => {
               </div>
 
               {notesExpanded && (
-                <>
+                <div className={isEditing ? 'relative z-10' : ''}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-4">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm font-medium text-slate-600 dark:text-slate-400 w-28 flex-shrink-0">Watch list</span>
@@ -1304,7 +1304,7 @@ const TicketDetail = () => {
                         Additional comments (Customer visible)
                       </label>
                       <textarea
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                        className="w-full border-2 border-black rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 px-2.5 py-1.5 text-sm transition-colors hover:border-black focus:outline-none focus:ring-2 focus:ring-black focus:border-black resize-none"
                         id="additional-comments"
                         rows={3}
                         value={additionalComments}
@@ -1324,7 +1324,7 @@ const TicketDetail = () => {
                         Work notes
                       </label>
                       <textarea
-                        className="w-full border-amber-300 dark:border-amber-700 rounded bg-amber-50 dark:bg-amber-900/20 text-slate-900 dark:text-slate-200 focus:ring-amber-500 focus:border-amber-500 px-2.5 py-1.5 text-sm transition-colors focus:outline-none focus:ring-2 resize-none"
+                        className="w-full border-2 border-black rounded bg-amber-50 dark:bg-amber-900/20 text-slate-900 dark:text-slate-200 focus:ring-black focus:border-black px-2.5 py-1.5 text-sm transition-colors hover:border-black focus:outline-none focus:ring-2 resize-none"
                         id="work-notes"
                         rows={3}
                         value={workNotes}
@@ -1392,7 +1392,7 @@ const TicketDetail = () => {
                     </div>
                   </div>
                   </div>
-                </>
+                </div>
                 )}
               </div>
             </div>
