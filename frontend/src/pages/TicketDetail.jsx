@@ -731,7 +731,7 @@ const TicketDetail = () => {
   };
 
   return (
-    <div className={`flex h-screen overflow-hidden ${isEditing ? 'bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30' : 'bg-slate-50 dark:bg-slate-900'}`}>
+    <div className="flex h-screen bg-white overflow-hidden">
       {/* SIDEBAR */}
       <Sidebar userRole={user?.role || 'customer'} />
 

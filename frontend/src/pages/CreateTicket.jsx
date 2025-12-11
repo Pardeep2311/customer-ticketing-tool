@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
   Menu,
@@ -295,6 +295,7 @@ const ReferenceField = ({
 
 export default function CreateTicket() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(false);
@@ -337,7 +338,21 @@ export default function CreateTicket() {
     if (user) {
       setForm(f => ({ ...f, requester_id: user.id?.toString() || '' }));
     }
-  }, [user]);
+    // Load template if provided
+    if (location.state?.template) {
+      const template = location.state.template;
+      setForm(f => ({
+        ...f,
+        subject: template.subject || '',
+        description: template.description || '',
+        category_id: template.category_id?.toString() || '',
+        priority: template.priority?.toString() || '3',
+      }));
+      if (template.category_id) {
+        fetchSubcategories(parseInt(template.category_id));
+      }
+    }
+  }, [user, location.state]);
 
   const fetchNextTicketNumber = async () => {
     try {
@@ -556,6 +571,34 @@ export default function CreateTicket() {
             <h1 className="text-base font-semibold text-slate-900 dark:text-slate-100 ml-1">Create New Ticket</h1>
           </div>
         <div className="flex items-center gap-2">
+          <button
+            className="h-8 px-4 text-sm border-2 border-black rounded hover:bg-gray-50 flex items-center gap-2"
+            onClick={() => {
+              const templateName = prompt('Enter template name:');
+              if (templateName && templateName.trim()) {
+                if (user?.id) {
+                  const templateKey = `ticket_templates_${user.id}`;
+                  const savedTemplates = JSON.parse(localStorage.getItem(templateKey) || '[]');
+                  const newTemplate = {
+                    id: Date.now(),
+                    name: templateName.trim(),
+                    subject: form.subject,
+                    description: form.description,
+                    category_id: form.category_id,
+                    priority: form.priority,
+                    created_at: new Date().toISOString(),
+                  };
+                  savedTemplates.push(newTemplate);
+                  localStorage.setItem(templateKey, JSON.stringify(savedTemplates));
+                  toast.success('Template saved successfully');
+                }
+              }
+            }}
+            title="Save as Template"
+          >
+            <BookOpen className="w-4 h-4" />
+            Save Template
+          </button>
           <button className="h-8 px-4 text-sm btn-cancel-gradient" onClick={() => navigate(-1)}>
             Cancel
           </button>

@@ -55,11 +55,11 @@ const KnowledgeBase = () => {
 
   return (
     <DashboardLayout userRole={user?.role}>
-      <div className="p-6">
+      <div className="p-6 bg-white min-h-full">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">Knowledge Base</h1>
-          <p className="text-gray-400">Find answers to common questions and solutions</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Knowledge Base</h1>
+          <p className="text-gray-600">Find answers to common questions and solutions</p>
         </div>
 
         {/* Search Bar */}
@@ -72,7 +72,7 @@ const KnowledgeBase = () => {
                 placeholder="Search articles, FAQs, or solutions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-gray-800 border-gray-700 text-white"
+                className="pl-10 bg-white border-gray-300 text-gray-900"
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
@@ -82,36 +82,42 @@ const KnowledgeBase = () => {
 
         {/* Quick Links */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 hover:border-blue-500 transition-colors cursor-pointer">
+          <div className="bg-blue-50 p-4 rounded-lg border-2 border-black hover:border-blue-500 transition-colors cursor-pointer shadow-sm">
             <BookOpen className="w-8 h-8 text-blue-500 mb-2" />
-            <h3 className="text-white font-semibold mb-1">All Articles</h3>
-            <p className="text-gray-400 text-sm">Browse all knowledge base articles</p>
+            <h3 className="text-slate-900 font-semibold mb-1">All Articles</h3>
+            <p className="text-gray-600 text-sm">Browse all knowledge base articles</p>
           </div>
-          <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 hover:border-blue-500 transition-colors cursor-pointer">
+          <div className="bg-green-50 p-4 rounded-lg border-2 border-black hover:border-green-500 transition-colors cursor-pointer shadow-sm">
             <HelpCircle className="w-8 h-8 text-green-500 mb-2" />
-            <h3 className="text-white font-semibold mb-1">FAQs</h3>
-            <p className="text-gray-400 text-sm">Frequently asked questions</p>
+            <h3 className="text-slate-900 font-semibold mb-1">FAQs</h3>
+            <p className="text-gray-600 text-sm">Frequently asked questions</p>
           </div>
-          <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 hover:border-blue-500 transition-colors cursor-pointer">
+          <div className="bg-yellow-50 p-4 rounded-lg border-2 border-black hover:border-yellow-500 transition-colors cursor-pointer shadow-sm">
             <Star className="w-8 h-8 text-yellow-500 mb-2" />
-            <h3 className="text-white font-semibold mb-1">Favorites</h3>
-            <p className="text-gray-400 text-sm">Your bookmarked articles</p>
+            <h3 className="text-slate-900 font-semibold mb-1">Favorites</h3>
+            <p className="text-gray-600 text-sm">Your bookmarked articles</p>
           </div>
         </div>
 
         {/* Articles List */}
-        <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+        <div className="bg-slate-50 rounded-lg border-2 border-black p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white">Popular Articles</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Popular Articles</h2>
             <div className="flex items-center space-x-2">
-              <Tag className="w-5 h-5 text-gray-400" />
+              <Tag className="w-5 h-5 text-gray-600" />
               <select 
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm"
+                className="bg-white border-2 border-black text-gray-900 rounded px-3 py-1 text-sm"
               >
                 <option value="">All Categories</option>
-                {categories.map((cat) => (
+                <option value="getting-started">Getting Started</option>
+                <option value="technical-support">Technical Support</option>
+                <option value="troubleshooting">Troubleshooting</option>
+                <option value="features-guides">Features & Guides</option>
+                <option value="faq">Frequently Asked Questions</option>
+                <option value="best-practices">Best Practices</option>
+                {categories.length > 0 && categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
@@ -123,8 +129,8 @@ const KnowledgeBase = () => {
               <div className="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : articles.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <div className="text-center py-8 text-gray-600">
+              <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-50 text-gray-400" />
               <p>No articles found</p>
             </div>
           ) : (
@@ -132,12 +138,12 @@ const KnowledgeBase = () => {
               {articles.map((article) => (
                 <div
                   key={article.id}
-                  className="bg-gray-900 p-4 rounded-lg border border-gray-700 hover:border-blue-500 transition-colors cursor-pointer"
+                  className="bg-white p-4 rounded-lg border-2 border-black hover:border-blue-500 transition-colors cursor-pointer hover:bg-blue-50"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-white font-semibold mb-1">{article.title}</h3>
-                      <p className="text-gray-400 text-sm mb-2 line-clamp-2">{article.content}</p>
+                      <h3 className="text-slate-900 font-semibold mb-1">{article.title}</h3>
+                      <p className="text-gray-600 text-sm mb-2 line-clamp-2">{article.content}</p>
                       <div className="flex items-center space-x-4 text-xs text-gray-500">
                         <span className="flex items-center space-x-1">
                           <Tag className="w-3 h-3" />

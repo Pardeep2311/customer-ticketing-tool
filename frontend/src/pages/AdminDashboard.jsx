@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { getAdminDashboard } from '../api/dashboard';
 import { getTickets, updateTicket, deleteTicket } from '../api/tickets';
 import { toast } from 'sonner';
-import { Plus, Search, Filter, Calendar, Building, Columns, ChevronDown, Star, MoreVertical, Trash2 } from 'lucide-react';
+import { Plus, Search, Filter, Calendar, Building, Columns, ChevronDown, Star, MoreVertical, Trash2, Download, FileText, X, User, Tag as TagIcon } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Button from '../components/ui/button';
 import Input from '../components/ui/input';
@@ -18,16 +18,27 @@ const AdminDashboard = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filters] = useState({
+  const [advancedFilters, setAdvancedFilters] = useState({
     status: '',
     priority: '',
     assigned_to: '',
+    category_id: '',
+    dateFrom: '',
+    dateTo: '',
   });
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [employees, setEmployees] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [selectedTicketIds, setSelectedTicketIds] = useState([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [favoriteTickets, setFavoriteTickets] = useState([]);
+  const [showBulkAssignModal, setShowBulkAssignModal] = useState(false);
+  const [showBulkPriorityModal, setShowBulkPriorityModal] = useState(false);
+  const [bulkAssignTo, setBulkAssignTo] = useState('');
+  const [bulkPriority, setBulkPriority] = useState('');
+  const [templates, setTemplates] = useState([]);
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [activeFilter, setActiveFilter] = useState(() => {
     // Get filter from URL params, default to 'all'
     return searchParams.get('filter') || 'all';
@@ -36,7 +47,9 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchDashboardData();
     fetchEmployees();
+    fetchCategories();
     loadFavorites();
+    loadTemplates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -51,7 +64,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchTickets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeFilter, searchTerm]);
+  }, [activeFilter, searchTerm, advancedFilters]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -98,6 +111,67 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/categories');
+      if (response.data.success) {
+        setCategories(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
+
+  const loadTemplates = () => {
+    if (user?.id) {
+      const templateKey = `ticket_templates_${user.id}`;
+      const savedTemplates = JSON.parse(localStorage.getItem(templateKey) || '[]');
+      setTemplates(savedTemplates);
+    }
+  };
+
+  const saveTemplate = (template) => {
+    if (!user?.id) return;
+    const templateKey = `ticket_templates_${user.id}`;
+    const savedTemplates = JSON.parse(localStorage.getItem(templateKey) || '[]');
+    const newTemplate = {
+      id: Date.now(),
+      name: template.name,
+      subject: template.subject,
+      description: template.description,
+      category_id: template.category_id,
+      priority: template.priority,
+      created_at: new Date().toISOString(),
+    };
+    savedTemplates.push(newTemplate);
+    localStorage.setItem(templateKey, JSON.stringify(savedTemplates));
+    setTemplates(savedTemplates);
+    toast.success('Template saved successfully');
+  };
+
+  const deleteTemplate = (templateId) => {
+    if (!user?.id) return;
+    const templateKey = `ticket_templates_${user.id}`;
+    const savedTemplates = JSON.parse(localStorage.getItem(templateKey) || '[]');
+    const updated = savedTemplates.filter(t => t.id !== templateId);
+    localStorage.setItem(templateKey, JSON.stringify(updated));
+    setTemplates(updated);
+    toast.success('Template deleted');
+  };
+
+  const applyTemplate = (template) => {
+    navigate('/tickets/create', {
+      state: {
+        template: {
+          subject: template.subject,
+          description: template.description,
+          category_id: template.category_id,
+          priority: template.priority,
+        }
+      }
+    });
+  };
+
   const loadFavorites = () => {
     if (user?.id) {
       const favoriteKey = `favorite_tickets_${user.id}`;
@@ -139,7 +213,7 @@ const AdminDashboard = () => {
       setLoading(true);
       // Clear any previous selection when loading new tickets
       setSelectedTicketIds([]);
-      const params = { ...filters };
+      const params = { ...advancedFilters };
       
       // Apply active filter
       switch (activeFilter) {
@@ -167,6 +241,16 @@ const AdminDashboard = () => {
         params.unassigned = true;
       }
       
+      // Apply date range filter
+      if (params.dateFrom) {
+        params.date_from = params.dateFrom;
+        delete params.dateFrom;
+      }
+      if (params.dateTo) {
+        params.date_to = params.dateTo;
+        delete params.dateTo;
+      }
+      
       Object.keys(params).forEach(key => {
         if (params[key] === '' || params[key] === false) delete params[key];
       });
@@ -174,6 +258,20 @@ const AdminDashboard = () => {
       const response = await getTickets(params);
       if (response.success) {
         let filteredTickets = response.data.tickets;
+        
+        // Apply date range filter on frontend if backend doesn't support it
+        if (advancedFilters.dateFrom || advancedFilters.dateTo) {
+          filteredTickets = filteredTickets.filter(ticket => {
+            const ticketDate = new Date(ticket.created_at);
+            if (advancedFilters.dateFrom && ticketDate < new Date(advancedFilters.dateFrom)) return false;
+            if (advancedFilters.dateTo) {
+              const toDate = new Date(advancedFilters.dateTo);
+              toDate.setHours(23, 59, 59, 999);
+              if (ticketDate > toDate) return false;
+            }
+            return true;
+          });
+        }
         
         if (searchTerm) {
           filteredTickets = filteredTickets.filter(
@@ -349,6 +447,225 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleBulkAssign = async () => {
+    if (!bulkAssignTo || selectedTicketIds.length === 0) return;
+    try {
+      setBulkUpdating(true);
+      await Promise.all(
+        selectedTicketIds.map((id) =>
+          updateTicket(id, {
+            assigned_to: bulkAssignTo,
+            status: 'in_progress',
+          })
+        )
+      );
+      const assignee = employees.find(e => e.id.toString() === bulkAssignTo);
+      toast.success(`Assigned ${selectedTicketIds.length} ticket(s) to ${assignee?.name || 'user'}`);
+      setShowBulkAssignModal(false);
+      setBulkAssignTo('');
+      clearSelection();
+      fetchTickets();
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Bulk assign error:', error);
+      toast.error('Failed to assign selected tickets');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const handleBulkPriorityChange = async () => {
+    if (!bulkPriority || selectedTicketIds.length === 0) return;
+    try {
+      setBulkUpdating(true);
+      await Promise.all(
+        selectedTicketIds.map((id) =>
+          updateTicket(id, {
+            priority: bulkPriority,
+          })
+        )
+      );
+      toast.success(`Updated priority for ${selectedTicketIds.length} ticket(s) to ${bulkPriority}`);
+      setShowBulkPriorityModal(false);
+      setBulkPriority('');
+      clearSelection();
+      fetchTickets();
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Bulk priority change error:', error);
+      toast.error('Failed to update priority');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const exportToCSV = () => {
+    if (tickets.length === 0) {
+      toast.error('No tickets to export');
+      return;
+    }
+
+    try {
+      const headers = ['Ticket Number', 'Subject', 'Status', 'Priority', 'Category', 'Assigned To', 'Customer', 'Created At', 'Updated At'];
+      const rows = tickets.map(ticket => [
+        ticket.ticket_number || '',
+        (ticket.subject || '').replace(/"/g, '""'),
+        ticket.status || '',
+        ticket.priority || '',
+        (ticket.category_name || '').replace(/"/g, '""'),
+        (ticket.assigned_to_name || 'Unassigned').replace(/"/g, '""'),
+        (ticket.customer_name || '').replace(/"/g, '""'),
+        new Date(ticket.created_at).toLocaleString(),
+        new Date(ticket.updated_at).toLocaleString(),
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""').replace(/\n/g, ' ').replace(/\r/g, '')}"`).join(','))
+      ].join('\n');
+
+      // Add BOM for UTF-8 to ensure Excel opens it correctly
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `tickets_export_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success(`Exported ${tickets.length} ticket(s) to CSV`);
+    } catch (error) {
+      console.error('CSV export error:', error);
+      toast.error('Failed to export CSV');
+    }
+  };
+
+  const exportToPDF = () => {
+    if (tickets.length === 0) {
+      toast.error('No tickets to export');
+      return;
+    }
+
+    // Create HTML content for PDF
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Tickets Export</title>
+          <style>
+            @media print {
+              @page {
+                margin: 1cm;
+                size: A4 landscape;
+              }
+            }
+            body {
+              font-family: Arial, sans-serif;
+              font-size: 10px;
+              margin: 0;
+              padding: 20px;
+            }
+            h1 {
+              text-align: center;
+              margin-bottom: 20px;
+              font-size: 18px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 10px;
+            }
+            th, td {
+              border: 1px solid #000;
+              padding: 6px;
+              text-align: left;
+            }
+            th {
+              background-color: #f0f0f0;
+              font-weight: bold;
+            }
+            tr:nth-child(even) {
+              background-color: #f9f9f9;
+            }
+            .header-info {
+              margin-bottom: 20px;
+              font-size: 12px;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Ticket Export Report</h1>
+          <div class="header-info">
+            <p><strong>Export Date:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>Total Tickets:</strong> ${tickets.length}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Ticket Number</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Category</th>
+                <th>Assigned To</th>
+                <th>Customer</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tickets.map(ticket => `
+                <tr>
+                  <td>${ticket.ticket_number || 'N/A'}</td>
+                  <td>${(ticket.subject || '').substring(0, 50)}</td>
+                  <td>${ticket.status || 'N/A'}</td>
+                  <td>${ticket.priority || 'N/A'}</td>
+                  <td>${ticket.category_name || 'N/A'}</td>
+                  <td>${ticket.assigned_to_name || 'Unassigned'}</td>
+                  <td>${ticket.customer_name || 'N/A'}</td>
+                  <td>${new Date(ticket.created_at).toLocaleString()}</td>
+                  <td>${new Date(ticket.updated_at).toLocaleString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    // Create a new window and write the HTML
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      
+      // Wait for content to load, then trigger print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          toast.success('PDF export ready. Use your browser\'s print dialog to save as PDF.');
+        }, 250);
+      };
+    } else {
+      toast.error('Please allow pop-ups to export PDF');
+    }
+  };
+
+  const clearAdvancedFilters = () => {
+    setAdvancedFilters({
+      status: '',
+      priority: '',
+      assigned_to: '',
+      category_id: '',
+      dateFrom: '',
+      dateTo: '',
+    });
+    setShowAdvancedFilters(false);
+  };
+
   return (
     <DashboardLayout userRole={user?.role || 'admin'}>
       <div className="min-h-full bg-white">
@@ -361,13 +678,39 @@ const AdminDashboard = () => {
                 {dashboardData?.total || 0} {dashboardData?.total === 1 ? 'Ticket' : 'Tickets'}
               </p>
             </div>
-            <button
-              onClick={() => navigate('/tickets/create')}
-              className="btn-create-ticket-gradient flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Create Ticket
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowTemplatesModal(true)}
+                className="px-3 py-2 text-sm border-2 border-black rounded hover:bg-gray-50 flex items-center gap-2"
+                title="Ticket Templates"
+              >
+                <FileText className="w-4 h-4" />
+                Templates
+              </button>
+              <button
+                onClick={exportToCSV}
+                className="px-3 py-2 text-sm border-2 border-black rounded hover:bg-gray-50 flex items-center gap-2"
+                title="Export to CSV"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </button>
+              <button
+                onClick={exportToPDF}
+                className="px-3 py-2 text-sm border-2 border-black rounded hover:bg-gray-50 flex items-center gap-2"
+                title="Export to PDF"
+              >
+                <Download className="w-4 h-4" />
+                Export PDF
+              </button>
+              <button
+                onClick={() => navigate('/tickets/create')}
+                className="btn-create-ticket-gradient flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Create Ticket
+              </button>
+            </div>
           </div>
         </div>
 
@@ -427,7 +770,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Search */}
+        {/* Search and Advanced Filters */}
         <div className="border-b border-gray-200 bg-white px-6 py-3">
           <div className="flex items-center space-x-4">
             <div className="flex-1 relative">
@@ -440,7 +783,123 @@ const AdminDashboard = () => {
                 className="pl-10 bg-gray-50 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-lg transition-all duration-300"
               />
             </div>
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className={`px-3 py-2 text-sm border-2 border-black rounded flex items-center gap-2 ${
+                showAdvancedFilters ? 'bg-blue-50' : 'hover:bg-gray-50'
+              }`}
+            >
+              <Filter className="w-4 h-4" />
+              Filters
+              {(advancedFilters.status || advancedFilters.priority || advancedFilters.assigned_to || advancedFilters.category_id || advancedFilters.dateFrom || advancedFilters.dateTo) && (
+                <span className="ml-1 px-1.5 py-0.5 bg-blue-600 text-white text-xs rounded-full">
+                  {[
+                    advancedFilters.status,
+                    advancedFilters.priority,
+                    advancedFilters.assigned_to,
+                    advancedFilters.category_id,
+                    advancedFilters.dateFrom,
+                    advancedFilters.dateTo
+                  ].filter(Boolean).length}
+                </span>
+              )}
+            </button>
           </div>
+          
+          {/* Advanced Filters Panel */}
+          {showAdvancedFilters && (
+            <div className="mt-4 p-4 bg-gray-50 border-2 border-black rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    value={advancedFilters.status}
+                    onChange={(e) => setAdvancedFilters({ ...advancedFilters, status: e.target.value })}
+                    className="w-full border-2 border-black rounded px-2 py-1.5 text-sm"
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="open">Open</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="closed">Closed</option>
+                    <option value="pending">Pending</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Priority</label>
+                  <select
+                    value={advancedFilters.priority}
+                    onChange={(e) => setAdvancedFilters({ ...advancedFilters, priority: e.target.value })}
+                    className="w-full border-2 border-black rounded px-2 py-1.5 text-sm"
+                  >
+                    <option value="">All Priorities</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Assigned To</label>
+                  <select
+                    value={advancedFilters.assigned_to}
+                    onChange={(e) => setAdvancedFilters({ ...advancedFilters, assigned_to: e.target.value })}
+                    className="w-full border-2 border-black rounded px-2 py-1.5 text-sm"
+                  >
+                    <option value="">All Assignees</option>
+                    <option value="unassigned">Unassigned</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
+                  <select
+                    value={advancedFilters.category_id}
+                    onChange={(e) => setAdvancedFilters({ ...advancedFilters, category_id: e.target.value })}
+                    className="w-full border-2 border-black rounded px-2 py-1.5 text-sm"
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Date From</label>
+                  <input
+                    type="date"
+                    value={advancedFilters.dateFrom}
+                    onChange={(e) => setAdvancedFilters({ ...advancedFilters, dateFrom: e.target.value })}
+                    className="w-full border-2 border-black rounded px-2 py-1.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Date To</label>
+                  <input
+                    type="date"
+                    value={advancedFilters.dateTo}
+                    onChange={(e) => setAdvancedFilters({ ...advancedFilters, dateTo: e.target.value })}
+                    className="w-full border-2 border-black rounded px-2 py-1.5 text-sm"
+                  />
+                </div>
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  onClick={clearAdvancedFilters}
+                  className="px-3 py-1.5 text-sm border-2 border-black rounded hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Table */}
@@ -452,7 +911,7 @@ const AdminDashboard = () => {
                 <span className="font-medium">
                   {selectedTicketIds.length} ticket{selectedTicketIds.length > 1 ? 's' : ''} selected
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
                     type="button"
                     onClick={handleBulkAssignToMe}
@@ -460,6 +919,24 @@ const AdminDashboard = () => {
                     className="px-2 py-1 rounded btn-assign-gradient disabled:opacity-60 text-xs"
                   >
                     Assign to me
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkAssignModal(true)}
+                    disabled={bulkUpdating}
+                    className="px-2 py-1 rounded btn-assign-gradient disabled:opacity-60 text-xs flex items-center gap-1"
+                  >
+                    <User className="w-3 h-3" />
+                    Assign to...
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkPriorityModal(true)}
+                    disabled={bulkUpdating}
+                    className="px-2 py-1 rounded btn-assign-gradient disabled:opacity-60 text-xs flex items-center gap-1"
+                  >
+                    <TagIcon className="w-3 h-3" />
+                    Change Priority
                   </button>
                   <button
                     type="button"
@@ -709,6 +1186,148 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Bulk Assign Modal */}
+      {showBulkAssignModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 border-2 border-black">
+            <h3 className="text-lg font-semibold mb-4">Assign Tickets</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Assign to:</label>
+              <select
+                value={bulkAssignTo}
+                onChange={(e) => setBulkAssignTo(e.target.value)}
+                className="w-full border-2 border-black rounded px-3 py-2"
+              >
+                <option value="">Select user...</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowBulkAssignModal(false);
+                  setBulkAssignTo('');
+                }}
+                className="px-4 py-2 text-sm border-2 border-black rounded hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkAssign}
+                disabled={!bulkAssignTo || bulkUpdating}
+                className="px-4 py-2 text-sm btn-submit-gradient disabled:opacity-50"
+              >
+                Assign
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Priority Modal */}
+      {showBulkPriorityModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 border-2 border-black">
+            <h3 className="text-lg font-semibold mb-4">Change Priority</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Priority:</label>
+              <select
+                value={bulkPriority}
+                onChange={(e) => setBulkPriority(e.target.value)}
+                className="w-full border-2 border-black rounded px-3 py-2"
+              >
+                <option value="">Select priority...</option>
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowBulkPriorityModal(false);
+                  setBulkPriority('');
+                }}
+                className="px-4 py-2 text-sm border-2 border-black rounded hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkPriorityChange}
+                disabled={!bulkPriority || bulkUpdating}
+                className="px-4 py-2 text-sm btn-submit-gradient disabled:opacity-50"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Templates Modal */}
+      {showTemplatesModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-y-auto border-2 border-black">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Ticket Templates</h3>
+              <button
+                onClick={() => setShowTemplatesModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              {templates.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">No templates saved yet. Create a ticket and save it as a template.</p>
+              ) : (
+                templates.map((template) => (
+                  <div key={template.id} className="border-2 border-black rounded p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold">{template.name}</h4>
+                      <button
+                        onClick={() => deleteTemplate(template.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2"><strong>Subject:</strong> {template.subject}</p>
+                    <p className="text-sm text-gray-600 mb-2"><strong>Description:</strong> {template.description?.substring(0, 100)}...</p>
+                    <button
+                      onClick={() => {
+                        applyTemplate(template);
+                        setShowTemplatesModal(false);
+                      }}
+                      className="mt-2 px-3 py-1.5 text-sm btn-submit-gradient"
+                    >
+                      Use Template
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <p className="text-sm text-gray-600 mb-2">To save a template, create a ticket and use the "Save as Template" option.</p>
+              <button
+                onClick={() => {
+                  setShowTemplatesModal(false);
+                  navigate('/tickets/create');
+                }}
+                className="px-4 py-2 text-sm btn-create-ticket-gradient"
+              >
+                Create New Ticket
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };

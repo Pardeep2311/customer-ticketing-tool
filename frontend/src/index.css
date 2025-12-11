@@ -773,13 +773,12 @@
     right: 0;
     bottom: 0;
     background-image: 
-      radial-gradient(circle at 2px 2px, rgba(59, 130, 246, 0.35) 2px, transparent 0),
-      radial-gradient(circle at 30px 30px, rgba(139, 92, 246, 0.3) 2px, transparent 0),
-      linear-gradient(45deg, transparent 47%, rgba(59, 130, 246, 0.15) 48%, rgba(59, 130, 246, 0.15) 52%, transparent 53%),
-      linear-gradient(-45deg, transparent 47%, rgba(139, 92, 246, 0.12) 48%, rgba(139, 92, 246, 0.12) 52%, transparent 53%);
-    background-size: 24px 24px, 48px 48px, 16px 16px, 16px 16px;
-    background-position: 0 0, 12px 12px, 0 0, 8px 8px;
-    opacity: 1 !important;
+      radial-gradient(circle at 20px 20px, rgba(59, 130, 246, 0.08) 3px, transparent 0),
+      radial-gradient(circle at 60px 60px, rgba(139, 92, 246, 0.06) 4px, transparent 0),
+      radial-gradient(circle at 100px 100px, rgba(59, 130, 246, 0.05) 2px, transparent 0);
+    background-size: 80px 80px, 120px 120px, 140px 140px;
+    background-position: 0 0, 40px 40px, 20px 20px;
+    opacity: 0.6 !important;
     pointer-events: none;
     z-index: 0;
   }
