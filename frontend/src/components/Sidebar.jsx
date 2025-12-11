@@ -519,7 +519,11 @@ const Sidebar = ({ userRole: propUserRole }) => {
 
         {/* User Profile */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 flex-1 min-w-0">
+          <Link
+            to="/profile"
+            onClick={handleLinkClick}
+            className="flex items-center space-x-2 flex-1 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
+          >
             <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-xs text-text-primary font-medium">
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
@@ -531,7 +535,7 @@ const Sidebar = ({ userRole: propUserRole }) => {
                 <p className="text-xs text-text-secondary truncate">{user?.email || ''}</p>
               </div>
             )}
-          </div>
+          </Link>
           <button
             onClick={handleLogout}
             className="p-2 text-text-secondary hover:text-text-primary hover:bg-sidebar-gradient-top rounded-lg transition-colors flex-shrink-0"

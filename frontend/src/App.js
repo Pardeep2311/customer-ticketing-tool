@@ -27,6 +27,8 @@ import CustomerClosedTickets from './pages/CustomerClosedTickets';
 import CustomerFavoriteTickets from './pages/CustomerFavoriteTickets';
 import ComingSoon from './pages/ComingSoon';
 import NotFound from './pages/NotFound';
+import Profile from './pages/Profile';
+import UserManagement from './pages/UserManagement';
 
 function App() {
   return (
@@ -295,6 +297,25 @@ function App() {
             }
           />
 
+          {/* Profile Route - All authenticated users */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute allowedRoles={['customer', 'admin', 'employee']}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* User Management Route - Admin only */}
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <UserManagement />
+              </ProtectedRoute>
+            }
+          />
 
           {/* 404 */}
           <Route path="*" element={<NotFound />} />
