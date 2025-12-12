@@ -13,7 +13,7 @@ const getUsers = async (req, res) => {
       const roles = role.split(',').map(r => r.trim());
       const placeholders = roles.map(() => '?').join(',');
       users = await query(
-        `SELECT id, name, email, role, is_active, created_at 
+        `SELECT id, name, email, company, role, is_active, created_at 
          FROM users 
          WHERE role IN (${placeholders}) 
          ORDER BY name ASC`,
@@ -21,7 +21,7 @@ const getUsers = async (req, res) => {
       );
     } else {
       users = await query(
-        `SELECT id, name, email, role, is_active, created_at 
+        `SELECT id, name, email, company, role, is_active, created_at 
          FROM users 
          ORDER BY name ASC`
       );
@@ -39,7 +39,7 @@ const getUser = async (req, res) => {
   try {
     const { id } = req.params;
     const users = await query(
-      `SELECT id, name, email, role, is_active, created_at 
+      `SELECT id, name, email, company, role, is_active, created_at 
        FROM users 
        WHERE id = ?`,
       [id]
@@ -60,7 +60,7 @@ const getUser = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, email, currentPassword, newPassword } = req.body;
+    const { name, email, company, currentPassword, newPassword } = req.body;
 
     // Validation
     if (!name || !email) {
@@ -121,21 +121,35 @@ const updateProfile = async (req, res) => {
       const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
       // Update user with new password
-      await query(
-        'UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?',
-        [name, email, hashedPassword, userId]
-      );
+      if (company !== undefined) {
+        await query(
+          'UPDATE users SET name = ?, email = ?, company = ?, password = ? WHERE id = ?',
+          [name, email, company || null, hashedPassword, userId]
+        );
+      } else {
+        await query(
+          'UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?',
+          [name, email, hashedPassword, userId]
+        );
+      }
     } else {
       // Update user without changing password
-      await query(
-        'UPDATE users SET name = ?, email = ? WHERE id = ?',
-        [name, email, userId]
-      );
+      if (company !== undefined) {
+        await query(
+          'UPDATE users SET name = ?, email = ?, company = ? WHERE id = ?',
+          [name, email, company || null, userId]
+        );
+      } else {
+        await query(
+          'UPDATE users SET name = ?, email = ? WHERE id = ?',
+          [name, email, userId]
+        );
+      }
     }
 
     // Get updated user data (without password)
     const updatedUser = await query(
-      `SELECT id, name, email, role, is_active, created_at 
+      `SELECT id, name, email, company, role, is_active, created_at 
        FROM users 
        WHERE id = ?`,
       [userId]
@@ -151,7 +165,7 @@ const updateProfile = async (req, res) => {
 // Create new user (Admin only)
 const createUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, company } = req.body;
 
     // Validation
     if (!name || !email || !password || !role) {
@@ -191,9 +205,9 @@ const createUser = async (req, res) => {
 
     // Insert new user
     const result = await query(
-      `INSERT INTO users (name, email, password, role, is_active) 
-       VALUES (?, ?, ?, ?, true)`,
-      [name, email, hashedPassword, role]
+      `INSERT INTO users (name, email, password, role, company, is_active) 
+       VALUES (?, ?, ?, ?, ?, true)`,
+      [name, email, hashedPassword, role, company || null]
     );
 
     const userId = result.insertId;
@@ -204,7 +218,7 @@ const createUser = async (req, res) => {
 
     // Get created user data (without password)
     const newUser = await query(
-      `SELECT id, name, email, role, is_active, created_at 
+      `SELECT id, name, email, company, role, is_active, created_at 
        FROM users 
        WHERE id = ?`,
       [userId]
@@ -221,7 +235,7 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, role, is_active, password } = req.body;
+    const { name, email, role, is_active, password, company } = req.body;
     const currentUserId = req.user.id;
 
     // Validation
@@ -282,6 +296,12 @@ const updateUser = async (req, res) => {
     let updateFields = ['name = ?', 'email = ?', 'role = ?'];
     let updateValues = [name, email, role];
 
+    // Add company if provided
+    if (company !== undefined) {
+      updateFields.push('company = ?');
+      updateValues.push(company || null);
+    }
+
     // Add is_active if provided
     if (is_active !== undefined) {
       updateFields.push('is_active = ?');
@@ -309,7 +329,7 @@ const updateUser = async (req, res) => {
 
     // Get updated user data (without password)
     const updatedUser = await query(
-      `SELECT id, name, email, role, is_active, created_at 
+      `SELECT id, name, email, company, role, is_active, created_at 
        FROM users 
        WHERE id = ?`,
       [id]

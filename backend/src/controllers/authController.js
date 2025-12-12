@@ -158,7 +158,7 @@ const getMe = async (req, res) => {
     const userId = req.user.id;
 
     const users = await query(
-      'SELECT id, name, email, role, is_active, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, company, role, is_active, created_at FROM users WHERE id = ?',
       [userId]
     );
 
