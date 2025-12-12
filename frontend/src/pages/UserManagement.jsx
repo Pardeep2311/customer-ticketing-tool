@@ -537,13 +537,13 @@ const UserManagement = () => {
             <div className="flex-1 relative">
               <label className="block text-xs font-medium text-gray-700 mb-1">Search</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
                 <Input
                   type="text"
                   placeholder="Search by name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-2 border-black"
+                  className="pl-10 border-2 border-black !bg-white !text-gray-900 placeholder:!text-gray-500 focus:!bg-white"
                 />
               </div>
             </div>
