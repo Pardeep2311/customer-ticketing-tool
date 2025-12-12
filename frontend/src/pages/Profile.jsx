@@ -355,10 +355,13 @@ const Profile = () => {
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
-            {/* Profile Header Card - Redesigned */}
-            <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Profile Header & Form */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Profile Header Card - Redesigned */}
+                <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
                 <div className="flex items-start gap-6">
                   {/* Profile Picture Section */}
                   <div className="relative group">
@@ -744,42 +747,57 @@ const Profile = () => {
               </div>
             </form>
 
-            {/* Account Activity Log - Redesigned */}
-            <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-8">
-              <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-200">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">Account Activity</h3>
               </div>
-              <div className="space-y-3">
-                {activityLog.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-sm text-gray-500">No activity recorded yet</p>
-                  </div>
-                ) : (
-                  activityLog.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-start gap-4 p-4 rounded-lg border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                        <Clock className="w-5 h-5 text-white" />
+
+              {/* Right Column - Account Activity (1/3 width) - Vertical Rectangular */}
+              <div className="lg:col-span-1 flex flex-col">
+                <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 overflow-hidden flex flex-col flex-1">
+                  {/* Header - Fixed */}
+                  <div className="bg-gradient-to-r from-purple-500 to-pink-600 px-5 py-4 flex-shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0 backdrop-blur-sm shadow-sm">
+                        <Activity className="w-5 h-5 text-white" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900">{activity.action}</p>
-                        {activity.details && (
-                          <p className="text-xs text-gray-600 mt-1">{activity.details}</p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {formatActivityTime(activity.timestamp)}
-                        </p>
-                      </div>
+                      <h3 className="text-lg font-bold text-white">Activity</h3>
                     </div>
-                  ))
-                )}
+                  </div>
+                  
+                  {/* Activity List - Scrollable */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+                    {activityLog.length === 0 ? (
+                      <div className="text-center py-10">
+                        <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Activity className="w-7 h-7 text-gray-400" />
+                        </div>
+                        <p className="text-sm text-gray-500 font-medium">No activity yet</p>
+                        <p className="text-xs text-gray-400 mt-1">Your account activities will appear here</p>
+                      </div>
+                    ) : (
+                      activityLog.map((activity) => (
+                        <div
+                          key={activity.id}
+                          className="p-4 rounded-lg border-2 border-gray-200 hover:border-purple-400 hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 transition-all bg-white shadow-sm"
+                        >
+                          <div className="flex gap-3">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                              <Clock className="w-4.5 h-4.5 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-gray-900 mb-1.5 leading-tight">{activity.action}</p>
+                              {activity.details && (
+                                <p className="text-xs text-gray-600 mb-2.5 leading-relaxed line-clamp-2">{activity.details}</p>
+                              )}
+                              <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                                <Clock className="w-3.5 h-3.5 flex-shrink-0 text-purple-500" />
+                                <span>{formatActivityTime(activity.timestamp)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
